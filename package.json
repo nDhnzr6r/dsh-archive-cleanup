@@ -19,6 +19,9 @@
     "docs",
     "icon.svg"
   ],
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "*"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
