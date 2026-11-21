@@ -8,7 +8,7 @@ import { homedir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import z from '@deepseek-ai/schemastery'
 
-export const name = '@local/archive-cleanup'
+export const name = '@nDhnzr6r/archive-cleanup'
 export const inject = ['workspaceRegistry', 'sessionPersistence']
 
 const DAY_MS = 86_400_000
@@ -293,7 +293,7 @@ export function apply(ctx, config) {
 
   ctx.inject(['commands'], (scope) => {
     scope.effect(() => scope.commands.register({
-      definitionId: '@local/archive-cleanup',
+      definitionId: '@nDhnzr6r/archive-cleanup',
       name: 'archive-retention',
       description: '查看归档会话清理状态，或立即执行一次检查',
       input: { hint: 'run' },

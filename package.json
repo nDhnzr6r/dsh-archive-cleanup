@@ -1,5 +1,5 @@
 {
-  "name": "@local/archive-cleanup",
+  "name": "@nDhnzr6r/archive-cleanup",
   "version": "1.6.3",
   "private": true,
   "description": "归档的会话满保留期限后自动删除，期限可设置，默认 30 天。",

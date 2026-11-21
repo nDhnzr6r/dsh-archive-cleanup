@@ -3,7 +3,7 @@
  */
 
 window.__ModuleLoader__.load({
-  id: '@local/archive-cleanup',
+  id: '@nDhnzr6r/archive-cleanup',
   factory(require) {
     const React = require('react')
     const h = React.createElement
@@ -84,10 +84,10 @@ window.__ModuleLoader__.load({
 `
 
     function installStyles() {
-      const tagId = '@local/archive-cleanup/page.css'
+      const tagId = '@nDhnzr6r/archive-cleanup/page.css'
       if (document.querySelector(`style[data-plugin-css=${JSON.stringify(tagId)}]`) !== null) return undefined
       const tag = document.createElement('style')
-      tag.dataset.plugin = '@local/archive-cleanup'
+      tag.dataset.plugin = '@nDhnzr6r/archive-cleanup'
       tag.dataset.pluginCss = tagId
       tag.textContent = CSS
       document.head.appendChild(tag)
