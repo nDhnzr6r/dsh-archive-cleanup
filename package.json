@@ -1,6 +1,6 @@
 {
   "name": "@local/archive-cleanup",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "private": true,
   "description": "Deletes archived DeepSeek Harness sessions once they have been idle for a configurable retention period.",
   "type": "module",
