@@ -10,6 +10,16 @@ window.__ModuleLoader__.load({
     const NS = 'plugins.archiveRetention'
     const ENTRY_ID = 'archive-retention'
 
+    // 宿主提供的原生控件；取不到时退回本文件里的简单实现。
+    let primitives = null
+    try {
+      primitives = require('@deepseek-ai/dsh-client-ui-primitives')
+    } catch {
+      primitives = null
+    }
+    const NativeButton = primitives !== null && typeof primitives.Button === 'function' ? primitives.Button : null
+    const NativeSwitch = primitives !== null && typeof primitives.Switch === 'function' ? primitives.Switch : null
+
     const en = {
       'section.title': 'Archived session cleanup',
       'heading': 'Archived session cleanup',
@@ -59,21 +69,18 @@ window.__ModuleLoader__.load({
 .a1r-number{box-sizing:border-box;width:88px;height:34px;padding:0 12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-3);font:inherit;font-size:13px;line-height:1.5;color:var(--dsw-alias-label-primary)}
 .a1r-number:focus-visible{outline:none;border-color:var(--dsw-alias-state-business-primary)}
 .a1r-number:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
-.a1r-toggle{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;background:var(--dsw-alias-border-l3);cursor:pointer}
-.a1r-toggle[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
-.a1r-toggle:disabled{cursor:default;opacity:.5}
-.a1r-toggle:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));outline-offset:2px}
-.a1r-knob{display:block;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-label-primary-foreground);transition:transform .12s ease}
-.a1r-toggle[aria-checked="false"] .a1r-knob{background:var(--dsw-alias-switch-thumb)}
-.a1r-toggle[aria-checked="true"] .a1r-knob{transform:translate(16px)}
+.a1r-fallback-toggle{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;background:var(--dsw-alias-border-l3);cursor:pointer}
+.a1r-fallback-toggle[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
+.a1r-fallback-toggle:disabled{cursor:default;opacity:.5}
+.a1r-fallback-knob{display:block;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-label-primary-foreground);transition:transform .12s ease}
+.a1r-fallback-toggle[aria-checked="true"] .a1r-fallback-knob{transform:translate(16px)}
+.a1r-fallback-button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border:none;border-radius:var(--dsw-radius-md);cursor:pointer;font:inherit;font-size:14px;line-height:22px;background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground)}
+.a1r-fallback-button:disabled{cursor:not-allowed;opacity:.4}
 .a1r-note{margin:12px 0 0;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);max-width:640px}
 .a1r-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-top:16px}
 .a1r-notice{font-size:12px;line-height:18px}
 .a1r-saved{color:var(--dsw-alias-state-success-primary)}
 .a1r-failed{color:var(--dsw-alias-state-error-primary)}
-.a1r-save{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:4px;height:36px;padding:0 14px;border:none;border-radius:var(--dsw-radius-md);cursor:pointer;font:inherit;font-size:14px;line-height:22px;background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground)}
-.a1r-save:hover:not(:disabled){background:var(--dsw-alias-button-primary-hover)}
-.a1r-save:disabled{cursor:not-allowed;opacity:.4}
 `
 
     function installStyles() {
@@ -93,6 +100,39 @@ window.__ModuleLoader__.load({
         const form = ctx.configForms.get(ENTRY_ID)
         const subscribe = (listener) => form.subscribe(listener)
         const readSnapshot = () => form.getSnapshot()
+
+        const renderToggle = (t, enabled, disabled, onChange) => {
+          if (NativeSwitch !== null) {
+            return h(NativeSwitch, {
+              checked: enabled,
+              disabled,
+              label: t('enabled.title'),
+              onChange: (next) => { onChange(next === true) },
+            })
+          }
+          return h('button', {
+            type: 'button',
+            role: 'switch',
+            'aria-checked': enabled ? 'true' : 'false',
+            'aria-label': t('enabled.title'),
+            className: 'a1r-fallback-toggle',
+            disabled,
+            onClick: () => { onChange(!enabled) },
+          }, h('span', { className: 'a1r-fallback-knob' }))
+        }
+
+        const renderSave = (t, busy, disabled, onSave) => {
+          const text = busy ? t('saving') : t('save')
+          if (NativeButton !== null) {
+            return h(NativeButton, { variant: 'primary', disabled, onClick: onSave }, text)
+          }
+          return h('button', {
+            type: 'button',
+            className: 'a1r-fallback-button',
+            disabled,
+            onClick: onSave,
+          }, text)
+        }
 
         function SettingsPage(props) {
           const { t } = props
@@ -120,6 +160,7 @@ window.__ModuleLoader__.load({
           const daysText = daysDraft === null ? String(savedDays) : daysDraft
           const parsedDays = Number(daysText)
           const daysValid = Number.isInteger(parsedDays) && parsedDays >= 1 && parsedDays <= 3650
+          const locked = !writable || busy
 
           const save = async () => {
             if (!writable || busy) return
@@ -146,9 +187,7 @@ window.__ModuleLoader__.load({
             }
           }
 
-          const noticeClass = notice === 'saved'
-            ? 'a1r-notice a1r-saved'
-            : notice === 'invalid' ? 'a1r-notice a1r-failed' : 'a1r-notice a1r-failed'
+          const noticeClass = notice === 'saved' ? 'a1r-notice a1r-saved' : 'a1r-notice a1r-failed'
 
           return h('div', { className: 'a1r-page' },
             h('h3', { className: 'a1r-heading' }, t('heading')),
@@ -158,18 +197,10 @@ window.__ModuleLoader__.load({
                 h('div', { className: 'a1r-title' }, t('enabled.title')),
                 h('p', { className: 'a1r-description' }, t('enabled.description'))
               ),
-              h('button', {
-                type: 'button',
-                role: 'switch',
-                'aria-checked': enabled ? 'true' : 'false',
-                'aria-label': t('enabled.title'),
-                className: 'a1r-toggle',
-                disabled: !writable || busy,
-                onClick: () => {
-                  setEnabledDraft(!enabled)
-                  setNotice(null)
-                },
-              }, h('span', { className: 'a1r-knob' }))
+              renderToggle(t, enabled, locked, (next) => {
+                setEnabledDraft(next)
+                setNotice(null)
+              })
             ),
             h('div', { className: 'a1r-row' },
               h('div', { className: 'a1r-text' },
@@ -183,7 +214,7 @@ window.__ModuleLoader__.load({
                   max: 3650,
                   step: 1,
                   value: daysText,
-                  disabled: !writable || busy,
+                  disabled: locked,
                   'aria-label': t('retention.title'),
                   className: 'a1r-number',
                   onChange: (event) => {
@@ -197,12 +228,7 @@ window.__ModuleLoader__.load({
             h('p', { className: 'a1r-note' }, t('schedule')),
             h('div', { className: 'a1r-actions' },
               notice === null ? null : h('span', { className: noticeClass }, t(notice)),
-              h('button', {
-                type: 'button',
-                className: 'a1r-save',
-                disabled: !writable || busy,
-                onClick: save,
-              }, busy ? t('saving') : t('save'))
+              renderSave(t, busy, locked || !daysValid ? true : false, save)
             )
           )
         }
