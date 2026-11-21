@@ -1,0 +1,3 @@
+- insert:
+    - id: archive-retention
+      name: '@local/archive-cleanup'

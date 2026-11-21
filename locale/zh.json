@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "归档会话自动清理",
+    "description": "归档的会话闲置超过设定天数的自动删除，期限可设置，默认 30 天。",
+    "detail": "docs/DETAIL.md"
+  }
+}

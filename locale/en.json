@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Archived session cleanup",
+    "description": "Deletes archived sessions after a configurable idle period, 30 days by default.",
+    "detail": "docs/DETAIL.md"
+  }
+}
